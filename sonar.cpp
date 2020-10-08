@@ -5,7 +5,7 @@
 //TODOS ESSES PINOS SÃO TEMPORÁRIOS
 // SERÁ NECESSÁRIO MUDAR.
 #define trig 9  // definir o Pino do Arduino que será a saída de trigger
-#define echo 8  // definir o Pino 8 do Arduino que será a entrada de echo
+#define echo 8  // definir o Pino do Arduino que será a entrada de echo
 
 
 void trigPuls();  
