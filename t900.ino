@@ -1,9 +1,9 @@
 #include <SoftwareSerial.h>
 
-SoftwareSerial HM10(2, 3); // RX = 2, TX = 3
 
-char appData;  
-String inData = "";
+// --- Mapeamento de Hardware ---
+//TODOS ESSES PINOS SÃO TEMPORÁRIOS
+// SERÁ NECESSÁRIO MUDAR.
 
 #define CS_THRESHOLD 15   // Definition of safety current (Check: "1.3 Monster Shield Example").
 
@@ -27,129 +27,164 @@ String inData = "";
 #define MOTOR_1 0
 #define MOTOR_2 1
 
-char entrada = "";
+#define trig 2 // definir o Pino do Arduino que será a saída de trigger
+#define echo 3  // definir o Pino do Arduino que será a entrada de echo
+
+
+void trigPuls();  
+void sonarBegin();
+
+
+char entrada;
 int rotacao = 0 ;
 
-void setup() {
+float pulse;     
+float dist_cm;   
+
+
+char appData;  
+String inData = "";
+
+
+void setup() 
+{
+    pinMode(trig, OUTPUT);   
+    pinMode(echo, INPUT);    
+
+    digitalWrite(trig, LOW); 
   
-  Serial.begin(9600); 
-  HM10.begin(9600);
-  
-  pinMode(MOTOR_ESQ_PIN, OUTPUT);
-  pinMode(MOTOR_ESQFD_PIN, OUTPUT);
+    pinMode(MOTOR_ESQ_PIN, OUTPUT);
+    pinMode(MOTOR_ESQFD_PIN, OUTPUT);
 
-  pinMode(MOTOR_DIR_PIN, OUTPUT);
-  pinMode(MOTOR_DIRFD_PIN, OUTPUT);
+    pinMode(MOTOR_DIR_PIN, OUTPUT);
+    pinMode(MOTOR_DIRFD_PIN, OUTPUT);
 
-  pinMode(PWM_MOTOR_1, OUTPUT);
-  pinMode(PWM_MOTOR_2, OUTPUT);
+    pinMode(PWM_MOTOR_1, OUTPUT);
+    pinMode(PWM_MOTOR_2, OUTPUT);
 
-  pinMode(CURRENT_SEN_1, OUTPUT);
-  pinMode(CURRENT_SEN_2, OUTPUT);
+    pinMode(CURRENT_SEN_1, OUTPUT);
+    pinMode(CURRENT_SEN_2, OUTPUT);
 
-  pinMode(EN_PIN_1, OUTPUT);
-  pinMode(EN_PIN_2, OUTPUT);
+    pinMode(EN_PIN_1, OUTPUT);
+    pinMode(EN_PIN_2, OUTPUT);
 
-  digitalWrite(EN_PIN_1, LOW);
-  digitalWrite(EN_PIN_2, LOW);
-  
+    digitalWrite(EN_PIN_1, LOW);
+    digitalWrite(EN_PIN_2, LOW);
+    Serial.begin(9600);      
+
 }
+
+
+// IMPLEMENTAÇÃO DAS FUNÇÕES
+void trigPulse()
+{
+    digitalWrite(trig, HIGH);  
+    delayMicroseconds(10);     
+    digitalWrite(trig, LOW);   
+}
+
+
+void sonarBegin()
+{
+    trigPulse();                 
+    pulse = pulseIn(echo, HIGH, 200000); 
+    dist_cm = pulse/58.82;      
+
+    Serial.println(dist_cm);     
+    delay(200);
+    
+}
+
 
 void liga(int pino){
-  digitalWrite(pino,HIGH); 
+    digitalWrite(pino,HIGH); 
 }
+
  
 void desliga(int pino){
-  digitalWrite(pino,LOW); 
+    digitalWrite(pino,LOW); 
 }
+
 
 void motor_direita(int pwm){
     analogWrite(PWM_MOTOR_2, pwm);
 }
 
+
 void motor_esquerda(int pwm){
     analogWrite(PWM_MOTOR_1, pwm);
 }
 
+
 void frente(){
-  liga(MOTOR_ESQ_PIN);
-  liga(MOTOR_DIR_PIN);
+    liga(MOTOR_ESQ_PIN);
+    liga(MOTOR_DIR_PIN);
 }
+
 
 void stopped(){
-  desliga(MOTOR_ESQ_PIN);
-  desliga(MOTOR_DIR_PIN);
-  desliga(MOTOR_ESQFD_PIN);
-  desliga(MOTOR_DIRFD_PIN);
+    desliga(MOTOR_ESQ_PIN);
+    desliga(MOTOR_DIR_PIN);
+    desliga(MOTOR_ESQFD_PIN);
+    desliga(MOTOR_DIRFD_PIN);
 }
+
 
 void re(){
-  liga(MOTOR_ESQFD_PIN);
-  liga(MOTOR_DIRFD_PIN);
+    liga(MOTOR_ESQFD_PIN);
+    liga(MOTOR_DIRFD_PIN);
 }
+
 
 void execucao(String entrada, void saida()){
-  if (inData == entrada){
-    saida();
-  }
- }
-
- void maximo(){
-  rotacao = 255;
+    if (inData == entrada){
+      saida();
+    }
 }
 
- void rotation(String entrada,String referencia){
-   if (entrada == referencia){
-        rotacao = entrada.toInt() * 25 ;
+
+void maximo(){
+    rotacao = 255;
+}
+
+
+void rotation(String entrada,String referencia){
+    if (entrada == referencia){
+          rotacao = entrada.toInt() * 25 ;
     }
- }
+}
 
- void direita_ft(){
-    liga(MOTOR_ESQ_PIN);
-    desliga(MOTOR_DIR_PIN);
- }
-
- void esquerda_ft(){
+void esquerda_ft(){
     desliga(MOTOR_ESQ_PIN);
     liga(MOTOR_DIR_PIN);
- }
+}
 
-  void esquerda_fd(){
+
+void esquerda_fd(){
     liga(MOTOR_ESQFD_PIN);
     desliga(MOTOR_DIRFD_PIN);
- }
+}
 
- void direita_fd(){
-    desliga(MOTOR_ESQFD_PIN);
-    liga(MOTOR_DIRFD_PIN);
- }
 
-void loop() {
-  
-  HM10.listen(); 
+void decision()
+{
+    stopped();
+    delay(500);
+    esquerda_ft();
+    delay(500);
+    stopped();
+    delay(500);
 
-  while (HM10.available() > 0) {   // if HM10 sends something then read
-    appData = HM10.read();
-    inData = String(appData);
-    digitalWrite(EN_PIN_1, HIGH);
-    digitalWrite(EN_PIN_2, HIGH);// save the data in string format
-    Serial.print(appData);
-    execucao("F",frente); 
-    execucao("S",stopped);
-    execucao("B",re); 
-    execucao("q",maximo);
-    execucao("I",direita_ft);
-    execucao("G",esquerda_ft);
-    execucao("H",direita_fd);
-    execucao("J",esquerda_fd);
+}
 
-    for (int i = 0;i < 10;i++){
-        String value = String(i);
-        rotation(inData,value);
+
+void loop() 
+{ 
+    sonarBegin();
+    frente();
+    if (dist_cm < 20)
+    {
+        decision();
     }
     
-    motor_direita(rotacao);
-    motor_esquerda(rotacao);
-  }
-
 }
