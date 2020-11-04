@@ -1,6 +1,3 @@
-#include <Arduino.h>
-
-
 // --- Mapeamento de Hardware ---
 //TODOS ESSES PINOS SÃO TEMPORÁRIOS
 // SERÁ NECESSÁRIO MUDAR.
