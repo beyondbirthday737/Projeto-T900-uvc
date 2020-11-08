@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <SoftwareSerial.h>
 
 
@@ -31,10 +32,6 @@
 #define echo 3  // definir o Pino do Arduino que será a entrada de echo
 
 
-void trigPuls();  
-void sonarBegin();
-
-
 char entrada;
 int rotacao = 0 ;
 
@@ -45,6 +42,122 @@ float dist_cm;
 char appData;  
 String inData = "";
 
+
+// IMPLEMENTAÇÃO DAS FUNÇÕES
+void trigPulse()
+{
+    digitalWrite(trig, HIGH);  
+    delayMicroseconds(10);     
+    digitalWrite(trig, LOW);   
+}
+
+
+void sonarBegin()
+{
+    trigPulse();                 
+    pulse = pulseIn(echo, HIGH, 200000); 
+    dist_cm = pulse/58.82;      
+
+    Serial.println(dist_cm);     
+    delay(200);
+    
+}
+
+
+void liga(int pino)
+{
+    digitalWrite(pino,HIGH); 
+}
+
+ 
+void desliga(int pino)
+{
+    digitalWrite(pino,LOW); 
+}
+
+
+void motor_direita(int pwm)
+{
+    analogWrite(PWM_MOTOR_2, pwm);
+}
+
+
+void motor_esquerda(int pwm)
+{
+    analogWrite(PWM_MOTOR_1, pwm);
+}
+
+
+void frente()
+{
+    liga(MOTOR_ESQ_PIN);
+    liga(MOTOR_DIR_PIN);
+}
+
+
+void stopped()
+{
+    desliga(MOTOR_ESQ_PIN);
+    desliga(MOTOR_DIR_PIN);
+    desliga(MOTOR_ESQFD_PIN);
+    desliga(MOTOR_DIRFD_PIN);
+}
+
+
+void re()
+{
+    liga(MOTOR_ESQFD_PIN);
+    liga(MOTOR_DIRFD_PIN);
+}
+
+
+void execucao(String entrada, void saida())
+{
+    if (inData == entrada)
+    {
+      saida();
+    }
+}
+
+
+void maximo()
+{
+    rotacao = 255;
+}
+
+
+void rotation(String entrada,String referencia)
+{
+    if (entrada == referencia)
+    {
+          rotacao = entrada.toInt() * 25 ;
+    }
+}
+
+void esquerda_ft()
+{
+    desliga(MOTOR_ESQ_PIN);
+    liga(MOTOR_DIR_PIN);
+}
+
+
+void esquerda_fd()
+{
+    liga(MOTOR_ESQFD_PIN);
+    desliga(MOTOR_DIRFD_PIN);
+}
+
+
+void decision()
+{
+    stopped();
+    delay(500);
+    esquerda_ft();
+    delay(500);
+    stopped();
+    delay(500);
+
+}
 
 void setup() 
 {
@@ -75,116 +188,18 @@ void setup()
 }
 
 
-// IMPLEMENTAÇÃO DAS FUNÇÕES
-void trigPulse()
-{
-    digitalWrite(trig, HIGH);  
-    delayMicroseconds(10);     
-    digitalWrite(trig, LOW);   
-}
-
-
-void sonarBegin()
-{
-    trigPulse();                 
-    pulse = pulseIn(echo, HIGH, 200000); 
-    dist_cm = pulse/58.82;      
-
-    Serial.println(dist_cm);     
-    delay(200);
-    
-}
-
-
-void liga(int pino){
-    digitalWrite(pino,HIGH); 
-}
-
- 
-void desliga(int pino){
-    digitalWrite(pino,LOW); 
-}
-
-
-void motor_direita(int pwm){
-    analogWrite(PWM_MOTOR_2, pwm);
-}
-
-
-void motor_esquerda(int pwm){
-    analogWrite(PWM_MOTOR_1, pwm);
-}
-
-
-void frente(){
-    liga(MOTOR_ESQ_PIN);
-    liga(MOTOR_DIR_PIN);
-}
-
-
-void stopped(){
-    desliga(MOTOR_ESQ_PIN);
-    desliga(MOTOR_DIR_PIN);
-    desliga(MOTOR_ESQFD_PIN);
-    desliga(MOTOR_DIRFD_PIN);
-}
-
-
-void re(){
-    liga(MOTOR_ESQFD_PIN);
-    liga(MOTOR_DIRFD_PIN);
-}
-
-
-void execucao(String entrada, void saida()){
-    if (inData == entrada){
-      saida();
-    }
-}
-
-
-void maximo(){
-    rotacao = 255;
-}
-
-
-void rotation(String entrada,String referencia){
-    if (entrada == referencia){
-          rotacao = entrada.toInt() * 25 ;
-    }
-}
-
-void esquerda_ft(){
-    desliga(MOTOR_ESQ_PIN);
-    liga(MOTOR_DIR_PIN);
-}
-
-
-void esquerda_fd(){
-    liga(MOTOR_ESQFD_PIN);
-    desliga(MOTOR_DIRFD_PIN);
-}
-
-
-void decision()
-{
-    stopped();
-    delay(500);
-    esquerda_ft();
-    delay(500);
-    stopped();
-    delay(500);
-
-}
-
 
 void loop() 
 { 
-    sonarBegin();
-    frente();
-    if (dist_cm < 20)
+    while (1)
     {
-        decision();
+        sonarBegin();
+        frente();
+        if (dist_cm < 70)
+        {
+            decision();
+        }
     }
-    
+      
 }
+
