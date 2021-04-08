@@ -1,4 +1,4 @@
-//Gustavo
+//Gustavo Reis
 #include <Ultrasonic.h> 
 
 // Configuração dos sensores
