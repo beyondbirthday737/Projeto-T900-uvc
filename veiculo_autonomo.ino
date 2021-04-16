@@ -1,4 +1,3 @@
-//Gustavo Reis
 #include <Ultrasonic.h> 
 
 // Configuração dos sensores
@@ -63,15 +62,6 @@ void loop()
 {
   while(1)
   {
-    if(millis() - tempoAnterior >= 3000)
-    {
-       tempoAnterior = millis();
-       robo_parado();
-       ligar_uvc();
-    }
-    
-    else
-    {
       robo_frente();                    
       float dist_cm_frente = distancia_frente();
       float dist_cm_direita = distancia_direita();    
@@ -83,8 +73,8 @@ void loop()
          if(dist_cm_direita < dist_cm_esquerda) { decisao_esquerda();} // caso a distancia medida na direita for menor que a esquerda o robo irá para a a esquerda
          if(dist_cm_direita == dist_cm_esquerda){ decisao_esquerda();} // caso as duas medidas forem iguais o robo irá para a esquerda. ESSA DECISÃO É SÓ PARA EVITAR QUE O ROBO FIQUE CONFUSO
       } 
-    }
-    delay(100);
+      
+      delay(100);
   }                          
 } 
 
